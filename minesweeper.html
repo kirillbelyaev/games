@@ -3,248 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Glass Minesweeper 2026</title>
+    <title>Neon Minesweeper 2026</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --neon-blue: #38bdf8;
-            --neon-red: #f43f5e;
-            --cell-size: 40px;
+            --bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #38bdf8;
+            --mine: #f43f5e;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.1) 0px, transparent 50%);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--font-main);
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            align-items: center;
+            height: 100vh;
             margin: 0;
             overflow: hidden;
         }
 
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
+        .game-container {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
             border-radius: 24px;
             padding: 2rem;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
         }
 
-        .header {
+        .stats-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
             margin-bottom: 1.5rem;
-            padding: 0 10px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
         }
 
-        .stat-box {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 0.5rem 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            font-weight: bold;
-            font-variant-numeric: tabular-nums;
+        #reset-btn {
+            font-size: 2rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: transform 0.2s;
         }
+
+        #reset-btn:hover { transform: scale(1.2); }
 
         #grid {
             display: grid;
-            gap: 6px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 16px;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px;
+            border-radius: 12px;
+            user-select: none;
         }
 
         .cell {
-            width: var(--cell-size);
-            height: var(--cell-size);
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
+            width: 35px;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-weight: 800;
-            font-size: 1.2rem;
-            transition: all 0.2s ease;
-            user-select: none;
+            font-weight: 900;
+            font-size: 1.1rem;
+            transition: all 0.15s ease;
         }
 
         .cell:hover:not(.revealed) {
-            background: rgba(255, 255, 255, 0.1);
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px var(--accent);
         }
 
         .cell.revealed {
             background: rgba(0, 0, 0, 0.3);
-            border-color: transparent;
             cursor: default;
         }
 
-        .cell.mine { background-color: var(--neon-red) !important; }
-        .cell.flagged::after { content: '🚩'; font-size: 1rem; }
-        
-        /* Number colors */
-        .n1 { color: #38bdf8; } .n2 { color: #4ade80; }
-        .n3 { color: #f87171; } .n4 { color: #818cf8; }
-        .n5 { color: #fbbf24; }
+        .cell.mine { background-color: var(--mine); }
+        .cell.flagged { color: #fbbf24; }
 
-        .controls { margin-top: 1.5rem; }
-        button {
-            background: var(--neon-blue);
-            color: #0f172a;
-            border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.9; }
+        /* Digit Colors */
+        .n1 { color: #38bdf8; } .n2 { color: #4ade80; }
+        .n3 { color: #fb7185; } .n4 { color: #818cf8; }
+        .n5 { color: #fbbf24; } .n6 { color: #2dd4bf; }
+        .n7 { color: #e879f9; } .n8 { color: #94a3b8; }
     </style>
 </head>
 <body>
 
-    <div class="glass-panel">
-        <div class="header">
-            <div class="stat-box">💣 <span id="mine-count">10</span></div>
-            <div class="stat-box">⏱️ <span id="timer">000</span></div>
+    <div class="game-container">
+        <div class="stats-bar">
+            <div id="mine-count">010</div>
+            <button id="reset-btn">😊</button>
+            <div id="timer">000</div>
         </div>
-        
         <div id="grid"></div>
-
-        <div class="controls">
-            <button onclick="initGame()">RESET GAME</button>
-        </div>
     </div>
 
     <script>
-        const ROWS = 10, COLS = 10, MINES = 15;
-        let board = [], gameOver = false, timerInterval;
+        const CONFIG = { rows: 10, cols: 10, mines: 12 };
+        let board = [];
+        let revealedCount = 0;
+        let gameOver = false;
+        let timer = 0;
+        let timerInterval;
 
-        function initGame() {
-            const grid = document.getElementById('grid');
-            grid.style.gridTemplateColumns = `repeat(${COLS}, ${var('--cell-size')})`;
-            grid.innerHTML = '';
-            board = [];
+        const gridElement = document.getElementById('grid');
+        const resetBtn = document.getElementById('reset-btn');
+        const mineDisplay = document.getElementById('mine-count');
+        const timerDisplay = document.getElementById('timer');
+
+        function init() {
             gameOver = false;
+            revealedCount = 0;
+            timer = 0;
             clearInterval(timerInterval);
-            document.getElementById('timer').innerText = '000';
-            document.getElementById('mine-count').innerText = MINES;
-
-            // Create board
-            for (let r = 0; r < ROWS; r++) {
-                board[r] = [];
-                for (let c = 0; c < COLS; c++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell');
-                    cell.dataset.r = r;
-                    cell.dataset.c = c;
-                    cell.addEventListener('click', () => reveal(r, c));
-                    cell.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        toggleFlag(r, c);
-                    });
-                    grid.appendChild(cell);
-                    board[r][c] = { mine: false, revealed: false, flagged: false, element: cell };
-                }
-            }
-
-            // Plant mines
-            let planted = 0;
-            while (planted < MINES) {
-                let r = Math.floor(Math.random() * ROWS);
-                let c = Math.floor(Math.random() * COLS);
-                if (!board[r][c].mine) {
-                    board[r][c].mine = true;
-                    planted++;
-                }
-            }
-            startTimer();
+            timerDisplay.innerText = "000";
+            mineDisplay.innerText = CONFIG.mines.toString().padStart(3, '0');
+            resetBtn.innerText = "😊";
+            
+            gridElement.style.gridTemplateColumns = `repeat(${CONFIG.cols}, 1fr)`;
+            createBoard();
         }
 
-        function reveal(r, c) {
+        function createBoard() {
+            gridElement.innerHTML = '';
+            board = [];
+            
+            for (let r = 0; r < CONFIG.rows; r++) {
+                board[r] = [];
+                for (let c = 0; c < CONFIG.cols; c++) {
+                    const cellEl = document.createElement('div');
+                    cellEl.classList.add('cell');
+                    cellEl.addEventListener('click', () => handleLeftClick(r, c));
+                    cellEl.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleRightClick(r, c);
+                    });
+                    
+                    gridElement.appendChild(cellEl);
+                    board[r][c] = {
+                        mine: false,
+                        revealed: false,
+                        flagged: false,
+                        count: 0,
+                        element: cellEl
+                    };
+                }
+            }
+            placeMines();
+            calculateNumbers();
+        }
+
+        function placeMines() {
+            let placed = 0;
+            while (placed < CONFIG.mines) {
+                let r = Math.floor(Math.random() * CONFIG.rows);
+                let c = Math.floor(Math.random() * CONFIG.cols);
+                if (!board[r][c].mine) {
+                    board[r][c].mine = true;
+                    placed++;
+                }
+            }
+        }
+
+        function calculateNumbers() {
+            for (let r = 0; r < CONFIG.rows; r++) {
+                for (let c = 0; c < CONFIG.cols; c++) {
+                    if (board[r][c].mine) continue;
+                    let count = 0;
+                    traverseNeighbors(r, c, (nr, nc) => {
+                        if (board[nr][nc].mine) count++;
+                    });
+                    board[r][c].count = count;
+                }
+            }
+        }
+
+        function traverseNeighbors(r, c, callback) {
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    let nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < CONFIG.rows && nc >= 0 && nc < CONFIG.cols) {
+                        callback(nr, nc);
+                    }
+                }
+            }
+        }
+
+        function handleLeftClick(r, c) {
             if (gameOver || board[r][c].revealed || board[r][c].flagged) return;
             
-            const cell = board[r][c];
-            cell.revealed = true;
-            cell.element.classList.add('revealed');
+            if (timer === 0) startTimer();
 
-            if (cell.mine) {
+            if (board[r][c].mine) {
                 endGame(false);
                 return;
             }
 
-            const minesAround = countMines(r, c);
-            if (minesAround > 0) {
-                cell.element.innerText = minesAround;
-                cell.element.classList.add(`n${minesAround}`);
+            revealCell(r, c);
+            if (revealedCount === (CONFIG.rows * CONFIG.cols) - CONFIG.mines) {
+                endGame(true);
+            }
+        }
+
+        function revealCell(r, c) {
+            const cell = board[r][c];
+            if (cell.revealed) return;
+
+            cell.revealed = true;
+            revealedCount++;
+            cell.element.classList.add('revealed');
+            
+            if (cell.count > 0) {
+                cell.element.innerText = cell.count;
+                cell.element.classList.add(`n${cell.count}`);
             } else {
-                // Recursive flood fill for empty areas
-                for (let dr = -1; dr <= 1; dr++) {
-                    for (let dc = -1; dc <= 1; dc++) {
-                        let nr = r + dr, nc = c + dc;
-                        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) reveal(nr, nc);
-                    }
-                }
+                traverseNeighbors(r, c, (nr, nc) => revealCell(nr, nc));
             }
-            checkWin();
         }
 
-        function countMines(r, c) {
-            let count = 0;
-            for (let dr = -1; dr <= 1; dr++) {
-                for (let dc = -1; dc <= 1; dc++) {
-                    let nr = r + dr, nc = c + dc;
-                    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc].mine) count++;
-                }
-            }
-            return count;
-        }
-
-        function toggleFlag(r, c) {
+        function handleRightClick(r, c) {
             if (gameOver || board[r][c].revealed) return;
-            board[r][c].flagged = !board[r][c].flagged;
-            board[r][c].element.classList.toggle('flagged');
+            const cell = board[r][c];
+            cell.flagged = !cell.flagged;
+            cell.element.innerText = cell.flagged ? "🚩" : "";
+            cell.element.classList.toggle('flagged');
         }
 
-        function checkWin() {
-            const win = board.flat().every(c => c.mine || c.revealed);
-            if (win) endGame(true);
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer++;
+                timerDisplay.innerText = timer.toString().padStart(3, '0');
+            }, 1000);
         }
 
         function endGame(won) {
             gameOver = true;
             clearInterval(timerInterval);
-            board.flat().forEach(c => {
-                if (c.mine) {
-                    c.element.classList.add('revealed', 'mine');
-                    c.element.innerText = '💣';
+            resetBtn.innerText = won ? "😎" : "😵";
+            
+            board.flat().forEach(cell => {
+                if (cell.mine) {
+                    cell.element.innerText = "💣";
+                    cell.element.classList.add('revealed', 'mine');
                 }
             });
-            setTimeout(() => alert(won ? "VICTORY!" : "GAME OVER"), 100);
+            if (won) alert("2026 Victory! System Secured.");
         }
 
-        function startTimer() {
-            let sec = 0;
-            timerInterval = setInterval(() => {
-                sec++;
-                document.getElementById('timer').innerText = sec.toString().padStart(3, '0');
-            }, 1000);
-        }
-
-        initGame();
+        resetBtn.addEventListener('click', init);
+        init();
     </script>
 </body>
 </html>
